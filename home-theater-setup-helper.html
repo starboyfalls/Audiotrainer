@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Theater Setup Helper</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap');
+:root{
+  --paper:#f6f0e6; --paper-2:#fbf7f0; --card:#ffffff;
+  --ink:#36323d; --ink-soft:#6b6573; --line:#ece4d6; --line-2:#f2ecdf;
+  --teal:#16a99a; --teal-d:#0f8b7e; --teal-soft:#e2f3f0;
+  --coral:#ff7a59; --coral-soft:#ffe8e1; --sun:#ffc24b;
+  --shadow:0 10px 30px rgba(70,55,40,.10),0 2px 6px rgba(70,55,40,.05);
+  --shadow-sm:0 4px 14px rgba(70,55,40,.08);
+  --f-display:'Baloo 2',system-ui,-apple-system,sans-serif;
+  --f-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:
+   radial-gradient(120% 70% at 50% -10%,#fdf9f2 0%,var(--paper) 60%) fixed,var(--paper);
+  color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+::selection{background:var(--teal-soft)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.shell{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+
+/* header */
+.head{display:flex;align-items:center;gap:14px;padding:16px 20px;margin-bottom:16px}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,var(--teal),#1ec3b1);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(22,169,154,.3)}
+.logo svg{width:24px;height:24px}
+.brand-name{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1;color:var(--ink)}
+.brand-sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+.pill{margin-left:auto;font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--teal-d);background:var(--teal-soft);border-radius:999px;padding:7px 16px;white-space:nowrap}
+
+/* controls */
+.controls{display:flex;align-items:center;gap:14px 26px;padding:14px 18px;margin-bottom:16px;flex-wrap:wrap}
+.cgrp{display:flex;align-items:center;gap:11px}
+.clabel{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--ink-soft)}
+.seg{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px;gap:3px}
+.seg button{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--ink-soft);background:transparent;border:0;padding:8px 17px;border-radius:999px;cursor:pointer;transition:.15s}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--teal);color:#fff;box-shadow:0 3px 10px rgba(22,169,154,.35)}
+.seg.views button[aria-pressed="true"]{background:var(--coral);color:#fff;box-shadow:0 3px 10px rgba(255,122,89,.32)}
+
+/* layout */
+.work{display:grid;grid-template-columns:1fr 366px;gap:16px;align-items:start}
+.stage{padding:18px}
+.stage-cap{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.stage-title{font-family:var(--f-display);font-weight:700;font-size:21px;color:var(--ink)}
+.stage-hint{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+.stage-hint .blip{width:9px;height:9px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 0 rgba(255,122,89,.5);animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,122,89,.5)}100%{box-shadow:0 0 0 9px rgba(255,122,89,0)}}
+svg.diagram{width:100%;height:auto;display:block}
+
+/* hotspots */
+.hot{cursor:pointer}
+.hot *{pointer-events:none}
+.hot .hit{pointer-events:all}
+.hot .ring{opacity:0;transition:opacity .15s}
+.hot:hover .ring{opacity:.6}
+.hot.sel .ring{opacity:1}
+.lbl{font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;fill:#54505d}
+.lbl-mut{fill:#9b94a3;font-weight:600}
+.lbl-sm{font-size:10.5px}
+
+/* detail */
+.detail{padding:0;overflow:hidden;position:sticky;top:16px}
+.dt-empty{padding:22px}
+.dt-empty h3{font-family:var(--f-display);font-weight:700;font-size:19px;margin:0 0 6px;color:var(--ink)}
+.dt-empty p{color:var(--ink-soft);font-size:14px;margin:0 0 18px}
+.legend{display:flex;flex-direction:column;gap:4px}
+.leg-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;cursor:pointer;border:1px solid transparent;transition:.13s;background:transparent;width:100%;text-align:left;color:inherit;font:inherit}
+.leg-row:hover{background:var(--paper);border-color:var(--line)}
+.leg-chip{width:18px;height:18px;border-radius:6px;flex:none;border:1px solid rgba(0,0,0,.12)}
+.leg-name{font-weight:600;font-size:14.5px;flex:1}
+.leg-code{font-family:var(--f-display);font-weight:600;font-size:13px;color:var(--ink-soft)}
+
+.dt-head{padding:20px 20px 16px}
+.dt-kicker{font-family:var(--f-display);font-weight:600;font-size:13px;color:var(--teal-d)}
+.dt-name{font-family:var(--f-display);font-weight:700;font-size:25px;line-height:1.08;margin-top:3px;color:var(--ink)}
+.dt-role{color:var(--ink-soft);font-size:14px;margin-top:9px;line-height:1.55}
+.dt-illu{display:flex;justify-content:center;align-items:center;padding:18px;background:linear-gradient(180deg,#faf5ec,#f3ece0);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.dt-illu svg{height:158px;width:auto;filter:drop-shadow(0 10px 18px rgba(70,55,40,.18))}
+.dt-spec{display:flex;flex-wrap:wrap;gap:8px;padding:16px 20px 2px}
+.spec{font-size:12.5px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 12px;display:inline-flex;gap:8px;align-items:center;font-weight:600}
+.spec .sc{width:12px;height:12px;border-radius:4px;border:1px solid rgba(0,0,0,.12)}
+.spec b{color:var(--ink-soft);font-weight:600}
+
+.issues{padding:14px 16px 18px}
+.issues-lab{font-family:var(--f-display);font-weight:600;font-size:15px;color:var(--ink);padding:6px 4px 10px}
+.iss{border:1px solid var(--line);border-radius:15px;margin-bottom:10px;overflow:hidden;background:var(--paper-2)}
+.iss.open{box-shadow:var(--shadow-sm);background:#fff}
+.iss-q{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;color:var(--ink);font-family:var(--f-body);font-weight:700;font-size:14.5px;padding:14px 14px;cursor:pointer}
+.iss-q:hover{color:var(--teal-d)}
+.iss-q .tw{margin-left:auto;width:24px;height:24px;border-radius:50%;background:var(--teal-soft);color:var(--teal-d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;transition:transform .2s;flex:none}
+.iss.open .iss-q .tw{transform:rotate(45deg);background:var(--coral-soft);color:var(--coral)}
+.iss-dot{width:11px;height:11px;border-radius:50%;flex:none}
+.iss-body{display:none;padding:0 16px 16px 37px}
+.iss.open .iss-body{display:block}
+.iss-body ol{margin:0;padding:0;list-style:none;counter-reset:s}
+.iss-body li{counter-increment:s;position:relative;padding:9px 0 9px 34px;font-size:14px;line-height:1.55;color:var(--ink);border-top:1px solid var(--line-2)}
+.iss-body li:first-child{border-top:0}
+.iss-body li::before{content:counter(s);position:absolute;left:0;top:8px;width:22px;height:22px;border-radius:50%;background:var(--teal-soft);color:var(--teal-d);font-family:var(--f-display);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.iss-body li b{color:var(--teal-d);font-weight:700}
+
+.deselect{display:block;width:100%;text-align:center;font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--ink-soft);background:var(--paper-2);border:0;border-top:1px solid var(--line);padding:15px;cursor:pointer}
+.deselect:hover{color:var(--teal-d)}
+
+@media (max-width:920px){.work{grid-template-columns:1fr}.detail{position:static}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="card head">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="6" y="2.5" width="12" height="19" rx="3.5" fill="#fff" opacity=".95"/><circle cx="12" cy="8" r="2" fill="#16a99a"/><circle cx="12" cy="15" r="3.4" fill="#16a99a"/></svg>
+    </span>
+    <div>
+      <div class="brand-name">Audiophia</div>
+      <div class="brand-sub">Setup &amp; support helper</div>
+    </div>
+    <div class="pill" id="pill">5.1 setup</div>
+  </header>
+
+  <section class="card controls">
+    <div class="cgrp">
+      <span class="clabel">Speaker setup</span>
+      <div class="seg" id="configSeg" role="group" aria-label="Speaker setup">
+        <button data-c="2.1" aria-pressed="false">2.1</button>
+        <button data-c="3.1" aria-pressed="false">3.1</button>
+        <button data-c="5.1" aria-pressed="true">5.1</button>
+        <button data-c="7.1" aria-pressed="false">7.1</button>
+      </div>
+    </div>
+    <div class="cgrp">
+      <span class="clabel">Looking at</span>
+      <div class="seg views" id="viewSeg" role="group" aria-label="Diagram view">
+        <button data-v="room" aria-pressed="true">The room</button>
+        <button data-v="front" aria-pressed="false">Receiver front</button>
+        <button data-v="back" aria-pressed="false">Receiver back</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="work">
+    <section class="card stage">
+      <div class="stage-cap">
+        <div class="stage-title" id="stageTitle">The room</div>
+        <div class="stage-hint"><span class="blip"></span>Tap any part to see how to fix it</div>
+      </div>
+      <div id="stage"></div>
+    </section>
+    <aside class="card detail" id="detail"></aside>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var stage=document.getElementById('stage');
+var detail=document.getElementById('detail');
+var pill=document.getElementById('pill');
+var stageTitle=document.getElementById('stageTitle');
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ---------- channel definitions (CEA color code kept for the content) ---------- */
+var SPK={
+  FL:{label:'Front Left',short:'FL',type:'tower',cea:'#e9e9e9',ceaName:'White',term:'FRONT L',passive:true},
+  FR:{label:'Front Right',short:'FR',type:'tower',cea:'#e0625b',ceaName:'Red',term:'FRONT R',passive:true},
+  C :{label:'Center',short:'C',type:'center',cea:'#5bbd8a',ceaName:'Green',term:'CENTER',passive:true},
+  SW:{label:'Subwoofer',short:'SW',type:'sub',cea:'#9b7fd0',ceaName:'Purple',term:'SUBWOOFER PRE-OUT',passive:false},
+  SL:{label:'Surround Left',short:'SL',type:'bookshelf',cea:'#5b9bd5',ceaName:'Blue',term:'SURROUND L',passive:true},
+  SR:{label:'Surround Right',short:'SR',type:'bookshelf',cea:'#a7adb5',ceaName:'Gray',term:'SURROUND R',passive:true},
+  SBL:{label:'Surround Back Left',short:'SBL',type:'bookshelf',cea:'#b07b4f',ceaName:'Brown',term:'SURR BACK L',passive:true},
+  SBR:{label:'Surround Back Right',short:'SBR',type:'bookshelf',cea:'#d8b48a',ceaName:'Tan',term:'SURR BACK R',passive:true}
+};
+var CONFIGS={'2.1':['FL','FR','SW'],'3.1':['FL','FR','C','SW'],'5.1':['FL','FR','C','SW','SL','SR'],'7.1':['FL','FR','C','SW','SL','SR','SBL','SBR']};
+/* top-down room coordinates (viewBox 0 0 860 620) — subwoofer moved toward the front wall */
+var POS={
+  FL:{x:150,y:150},FR:{x:710,y:150},C:{x:430,y:118},
+  SW:{x:262,y:150},SL:{x:96,y:370},SR:{x:764,y:370},
+  SBL:{x:300,y:556},SBR:{x:560,y:556}
+};
+var AVR={x:430,y:178};
+var SOFA={x:430,y:470};
+
+/* ---------- troubleshooting content (unchanged) ---------- */
+function chDrives(short){
+  if(short==='SL'||short==='SR') return 'this channel only plays when the source is surround (5.1/7.1) and the AVR is in a surround sound mode \u2014 not in Stereo/Pure Direct';
+  if(short==='SBL'||short==='SBR') return 'this channel needs 7.1 content (or the AVR set to upmix) and a surround sound mode \u2014 stereo and 5.1 material leave it silent by design';
+  return 'this channel plays in stereo and surround modes';
+}
+function speakerIssues(s){
+  if(s.short==='SW'){
+    return [
+      {q:'No bass / subwoofer is silent',steps:[
+        '<b>Power.</b> The sub is active \u2014 confirm its own power cable is plugged in and the rear power switch is ON. Many subs drop to auto-standby; play loud bass content to wake it or set the switch to ON.',
+        '<b>Signal cable.</b> Trace the RCA cable from the AVR <b>SUBWOOFER PRE-OUT</b> to the sub\u2019s LINE/LFE input. Re-seat both ends; a pulled RCA is the most common cause.',
+        '<b>AVR setup.</b> In Speaker Config, confirm Subwoofer = Yes and set the crossover near 80 Hz with the other speakers set to \u201CSmall\u201D so lows are routed to the sub.',
+        '<b>Sub gain.</b> Check the volume/gain knob on the sub itself isn\u2019t at minimum.',
+        '<b>Channel level.</b> Raise the Subwoofer level trim in the AVR\u2019s level menu if it\u2019s still weak.'
+      ]},
+      {q:'Bass is boomy or overpowering',steps:[
+        '<b>Gain.</b> Lower the sub\u2019s gain knob and/or the AVR subwoofer trim.',
+        '<b>Placement.</b> Corners reinforce bass \u2014 move the sub out of the corner to reduce boom.',
+        '<b>Phase.</b> Try the 0\u00B0/180\u00B0 phase switch; pick whichever setting gives fuller, tighter bass at the seat.',
+        '<b>Crossover.</b> If the sub has its own low-pass knob, set it to max (bypass) and let the AVR manage the crossover.'
+      ]}
+    ];
+  }
+  return [
+    {q:'No sound from the '+s.label.toLowerCase(),steps:[
+      '<b>Content & mode.</b> Confirm '+chDrives(s.short)+'.',
+      '<b>Both wire ends.</b> Check the binding posts at the speaker and the matching <b>'+s.term+'</b> terminal on the AVR. Re-seat the conductors; make sure no loose strands bridge + and \u2212.',
+      '<b>Polarity.</b> Keep + (red) to + and \u2212 (black) to \u2212 at both ends. A reversed end puts the speaker out of phase \u2014 thin, hollow, weak.',
+      '<b>Swap test.</b> Move this speaker\u2019s wires to a known-good channel on the AVR. If it plays there, the cable run or AVR channel is suspect; if it stays silent, suspect the speaker.',
+      '<b>Assignment & level.</b> In the AVR, confirm '+s.short+' is enabled in Speaker Config and its level trim isn\u2019t at minimum.'
+    ]},
+    {q:'Sound is weak, thin, or lacks bass',steps:[
+      '<b>Phase.</b> The classic cause is a reversed polarity on one end \u2014 verify + and \u2212 match at both the speaker and the AVR.',
+      '<b>Level & distance.</b> Re-run auto-calibration, or set this channel\u2019s level and distance manually in the AVR.',
+      '<b>Speaker size.</b> If set to \u201CSmall,\u201D that\u2019s normal \u2014 bass is routed to the sub via the crossover.'
+    ]},
+    {q:'Crackle or distortion',steps:[
+      '<b>Loose strands.</b> A stray wire whisker at the terminal can intermittently short \u2014 power down, re-strip, and re-seat cleanly.',
+      '<b>Overdrive.</b> Lower the volume; persistent distortion at moderate levels can mean the speaker or amp channel is stressed.',
+      '<b>Impedance.</b> Confirm the speaker\u2019s impedance matches the AVR\u2019s rating (commonly 6\u20138 \u03A9).'
+    ]}
+  ];
+}
+var AVR_PARTS={
+  'fp-power':{kicker:'Front panel \u00B7 Power',name:'Power / Standby',illu:'avr',
+    role:'Switches the receiver between standby and on. The indicator glows when powered.',
+    issues:[
+      {q:'Receiver won\u2019t turn on',steps:[
+        '<b>Power source.</b> Confirm the AC cord is firmly seated at the AVR and the wall/surge strip, and the strip is switched on.',
+        '<b>Standby light.</b> A dim standby light means it has power but isn\u2019t on \u2014 press Power once, firmly.',
+        '<b>Surge lockout.</b> After a power event, unplug for 60 seconds, then plug back in to clear a latched state.'
+      ]},
+      {q:'Turns on, then shuts off (protection)',steps:[
+        '<b>This is protection mode</b> \u2014 the AVR guarding against a fault, most often a speaker-wire short.',
+        '<b>Power down & unplug</b> before touching anything.',
+        '<b>Inspect terminals</b> for a stray + strand touching \u2212 or chassis; re-dress so conductors can\u2019t cross.',
+        '<b>Impedance.</b> Confirm no speaker is below the AVR\u2019s minimum impedance rating.'
+      ]}
+    ]},
+  'fp-volume':{kicker:'Front panel \u00B7 Master Volume',name:'Master Volume',illu:'knob',
+    role:'Sets overall output level across all channels. Often shown on the display in dB.',
+    issues:[
+      {q:'No sound at all from any speaker',steps:[
+        '<b>Mute.</b> Check the display for a MUTE indicator and clear it.',
+        '<b>Level.</b> Raise the volume \u2014 relative dB scales can sit very low after a reset.',
+        '<b>Input.</b> Confirm the selected Source actually has audio and is the device that\u2019s playing.',
+        '<b>Listening mode.</b> Pure Direct / analog-only modes can bypass processing; switch to a standard mode.'
+      ]}
+    ]},
+  'fp-source':{kicker:'Front panel \u00B7 Source',name:'Source / Input Select',illu:'knob',
+    role:'Selects which connected device the AVR listens to and displays.',
+    issues:[
+      {q:'No picture or sound from a device',steps:[
+        '<b>Right source.</b> Rotate to the input the device is physically plugged into (e.g., the HDMI labeled for it).',
+        '<b>Input assignment.</b> If the source name and jack don\u2019t match, fix the HDMI input assignment in the AVR setup.',
+        '<b>Device on.</b> Confirm the source device is powered and outputting.'
+      ]}
+    ]},
+  'fp-display':{kicker:'Front panel \u00B7 Display',name:'Front Display',illu:'display',
+    role:'Shows volume, selected source, incoming audio format, and status/error messages.',
+    issues:[
+      {q:'Display shows an error or keeps blinking',steps:[
+        '<b>Read it.</b> A blinking display with shutdown usually signals protection \u2014 check speaker wiring for shorts.',
+        '<b>Format.</b> The format readout (PCM / Dolby / DTS) tells you what the source is actually sending \u2014 useful when surrounds are silent.',
+        '<b>Dimmer.</b> A dark display may just be the dimmer setting, not a fault.'
+      ]}
+    ]},
+  'fp-mic':{kicker:'Front panel \u00B7 Setup Mic',name:'Calibration Mic Jack',illu:'mic',
+    role:'Input for the bundled measurement microphone used by auto-calibration (Audyssey).',
+    issues:[
+      {q:'System sounds unbalanced / uncalibrated',steps:[
+        '<b>Run calibration.</b> Plug the mic in here, place it at ear height at the main seat, and run the AVR\u2019s auto setup.',
+        '<b>Mic position.</b> Measure from the listening position, not next to the speakers.',
+        '<b>Result check.</b> Calibration sets per-channel level, distance, and crossover \u2014 the single biggest quality step.'
+      ]}
+    ]},
+  'fp-phones':{kicker:'Front panel \u00B7 Headphones',name:'Headphone Jack',illu:'mic',
+    role:'Front output for private listening; inserting a plug usually mutes the speakers.',
+    issues:[
+      {q:'Speakers went silent',steps:[
+        '<b>Check the jack.</b> A plug (or adapter) left in the headphone jack mutes the speaker outputs \u2014 remove it.',
+        '<b>Partial insert.</b> A half-seated plug can confuse detection; fully remove or fully insert.'
+      ]}
+    ]},
+  'hdmi-out':{kicker:'Back panel \u00B7 HDMI Monitor Out',name:'HDMI Out (ARC / eARC)',illu:'hdmi',
+    role:'Sends video to the TV and, via ARC/eARC, receives the TV\u2019s own app audio back into the AVR.',
+    issues:[
+      {q:'No sound from the TV\u2019s built-in apps',steps:[
+        '<b>ARC ports.</b> The cable must run from this <b>ARC/eARC</b> HDMI out to the TV\u2019s <b>ARC/eARC</b> HDMI port \u2014 not a regular HDMI input.',
+        '<b>Enable CEC.</b> Turn on HDMI-CEC at both ends (brand names: Anynet+, Bravia Sync, SimpLink, VIERA Link) and set the TV audio output to the receiver/ARC.',
+        '<b>Atmos drops.</b> Full Atmos needs <b>eARC</b> at both ends and the TV digital-audio set to Auto/Passthrough (not PCM).'
+      ]},
+      {q:'No picture on the TV',steps:[
+        '<b>TV input.</b> Select the TV input that this HDMI cable feeds.',
+        '<b>Cable.</b> Use a High-Speed/Ultra HDMI cable; re-seat both ends.'
+      ]}
+    ]},
+  'hdmi-in':{kicker:'Back panel \u00B7 HDMI Inputs',name:'HDMI Inputs',illu:'hdmi',
+    role:'Where source devices (streamer, console, Blu-ray) connect for video and audio.',
+    issues:[
+      {q:'A connected source has no signal',steps:[
+        '<b>Match the source.</b> Select the AVR input that matches the jack the device is plugged into.',
+        '<b>Assignment.</b> If labels and jacks don\u2019t line up, correct the HDMI input assignment in setup.',
+        '<b>Try another port.</b> Move the device to a different HDMI input to rule out a bad port.'
+      ]}
+    ]}
+};
+
+/* ---------- product illustrations (friendly, on light cards) ---------- */
+var CAB='#454552', CAB_IN='#33333e', CAB_ST='#5a5a68', DRV='#26262e', DRV_ST='#3f3f4a';
+function illu(kind,color){
+  color=color||'#cfd3d8';
+  if(kind==='tower'){
+    return wrap(120,158,
+      '<rect x="34" y="6" width="52" height="146" rx="11" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<rect x="40" y="12" width="40" height="134" rx="8" fill="'+CAB_IN+'"/>'+
+      '<circle cx="60" cy="36" r="9" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<circle cx="60" cy="74" r="16" fill="'+DRV+'" stroke="'+DRV_ST+'"/><circle cx="60" cy="74" r="6" fill="#43434e"/>'+
+      '<circle cx="60" cy="116" r="16" fill="'+DRV+'" stroke="'+DRV_ST+'"/><circle cx="60" cy="116" r="6" fill="#43434e"/>'+
+      '<rect x="40" y="140" width="40" height="5" rx="2.5" fill="'+color+'"/>');
+  }
+  if(kind==='bookshelf'){
+    return wrap(120,150,
+      '<rect x="28" y="40" width="64" height="78" rx="11" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<rect x="34" y="46" width="52" height="66" rx="8" fill="'+CAB_IN+'"/>'+
+      '<circle cx="60" cy="64" r="8" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<circle cx="60" cy="92" r="14" fill="'+DRV+'" stroke="'+DRV_ST+'"/><circle cx="60" cy="92" r="5" fill="#43434e"/>'+
+      '<rect x="34" y="107" width="52" height="5" rx="2.5" fill="'+color+'"/>');
+  }
+  if(kind==='center'){
+    return wrap(154,120,
+      '<rect x="10" y="44" width="134" height="50" rx="12" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<rect x="16" y="50" width="122" height="38" rx="8" fill="'+CAB_IN+'"/>'+
+      '<circle cx="46" cy="69" r="13" fill="'+DRV+'" stroke="'+DRV_ST+'"/><circle cx="46" cy="69" r="4" fill="#43434e"/>'+
+      '<circle cx="77" cy="69" r="7" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<circle cx="108" cy="69" r="13" fill="'+DRV+'" stroke="'+DRV_ST+'"/><circle cx="108" cy="69" r="4" fill="#43434e"/>'+
+      '<rect x="16" y="84" width="122" height="4" rx="2" fill="'+color+'"/>');
+  }
+  if(kind==='sub'){
+    return wrap(130,150,
+      '<rect x="20" y="16" width="90" height="120" rx="14" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<rect x="26" y="22" width="78" height="108" rx="10" fill="'+CAB_IN+'"/>'+
+      '<circle cx="65" cy="70" r="33" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<circle cx="65" cy="70" r="22" fill="#3a3a44" stroke="#4a4a56"/>'+
+      '<circle cx="65" cy="70" r="9" fill="#50505c"/>'+
+      '<rect x="44" y="112" width="42" height="10" rx="5" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<rect x="26" y="22" width="78" height="6" rx="3" fill="'+color+'" opacity=".85"/>');
+  }
+  if(kind==='avr') return wrap(200,116,frontPanelMini());
+  if(kind==='knob'){
+    return wrap(150,150,
+      '<circle cx="75" cy="75" r="52" fill="#ece4d6"/>'+
+      '<circle cx="75" cy="75" r="46" fill="'+CAB+'" stroke="'+CAB_ST+'" stroke-width="2"/>'+
+      '<g stroke="#5e5e6c">'+knurl(75,75,44,44,40)+'</g>'+
+      '<circle cx="75" cy="75" r="30" fill="'+CAB_IN+'"/>'+
+      '<rect x="72.5" y="33" width="5" height="17" rx="2.5" fill="'+'#ff7a59'+'"/>');
+  }
+  if(kind==='display'){
+    return wrap(210,120,
+      '<rect x="8" y="22" width="194" height="76" rx="12" fill="#10343a"/>'+
+      '<rect x="14" y="28" width="182" height="64" rx="9" fill="#0a262b"/>'+
+      '<text x="26" y="60" font-family="Baloo 2,sans-serif" font-weight="700" font-size="22" fill="#54d6c6" letter-spacing="1">Audiophia</text>'+
+      '<text x="26" y="82" font-family="Nunito,sans-serif" font-weight="600" font-size="13" fill="#3f9f96">Vol \u221228.5 dB \u00B7 Dolby</text>');
+  }
+  if(kind==='mic'){
+    return wrap(120,150,
+      '<rect x="51" y="12" width="18" height="76" rx="9" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<circle cx="60" cy="20" r="11" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<rect x="38" y="88" width="44" height="12" rx="4" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<line x1="60" y1="100" x2="60" y2="142" stroke="#b9b1a3" stroke-width="4" stroke-linecap="round"/>');
+  }
+  if(kind==='hdmi'){
+    return wrap(150,120,
+      '<path d="M28 48 h94 l-11 16 h-72 z" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<rect x="40" y="38" width="70" height="13" rx="3" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<text x="75" y="88" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="600" font-size="13" fill="#8a8595" letter-spacing="2">HDMI</text>');
+  }
+  return wrap(120,120,'');
+}
+function wrap(w,h,inner){return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>';}
+function knurl(cx,cy,r1,r2,n){var o='';for(var i=0;i<n;i++){var a=i/n*Math.PI*2;o+='<line x1="'+(cx+Math.cos(a)*r1).toFixed(1)+'" y1="'+(cy+Math.sin(a)*r1).toFixed(1)+'" x2="'+(cx+Math.cos(a)*(r2-6)).toFixed(1)+'" y2="'+(cy+Math.sin(a)*(r2-6)).toFixed(1)+'"/>';}return o;}
+
+var state={config:'5.1',view:'room',selected:null};
+
+/* ---------- ROOM ---------- */
+function speakerTopDown(key){
+  var s=SPK[key],p=POS[key];
+  var sel=state.selected===key?' sel':'';
+  var w,h;
+  if(s.type==='center'){w=66;h=22;}
+  else if(s.type==='sub'){w=42;h=42;}
+  else if(s.type==='tower'){w=32;h=36;}
+  else{w=36;h=28;}
+  var x=p.x-w/2,y=p.y-h/2;
+  var dx=SOFA.x-p.x,dy=SOFA.y-p.y,edge;
+  var estroke=' stroke="rgba(0,0,0,.18)" stroke-width=".6"';
+  if(s.type==='sub'){edge='';}
+  else if(Math.abs(dx)>Math.abs(dy)){edge='<rect x="'+(dx>0?x+w-5:x)+'" y="'+(y+4)+'" width="5" height="'+(h-8)+'" rx="2.5" fill="'+s.cea+'"'+estroke+'/>';}
+  else{edge='<rect x="'+(x+4)+'" y="'+(dy>0?y+h-5:y)+'" width="'+(w-8)+'" height="5" rx="2.5" fill="'+s.cea+'"'+estroke+'/>';}
+  var driver=s.type==='sub'
+    ? '<circle cx="'+p.x+'" cy="'+p.y+'" r="12" fill="'+DRV+'" stroke="'+DRV_ST+'"/><circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="#50505c"/>'
+    : '<rect x="'+(x+5)+'" y="'+(y+5)+'" width="'+(w-10)+'" height="'+(h-10)+'" rx="5" fill="'+CAB_IN+'"/>';
+  var labelY=p.y+h/2+17;
+  return '<g class="hot'+sel+'" data-id="'+key+'" tabindex="0" role="button" aria-label="'+esc(s.label)+'">'+
+    '<ellipse cx="'+p.x+'" cy="'+(y+h+3)+'" rx="'+(w/2+2)+'" ry="5" fill="rgba(60,45,30,.16)"/>'+
+    '<rect class="ring" opacity="0" x="'+(x-8)+'" y="'+(y-8)+'" width="'+(w+16)+'" height="'+(h+16)+'" rx="11" fill="none" stroke="'+s.cea+'" stroke-width="3"/>'+
+    '<rect class="hit" x="'+(x-8)+'" y="'+(y-8)+'" width="'+(w+16)+'" height="'+(h+34)+'" rx="11" fill="transparent"/>'+
+    '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="8" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+    driver+edge+
+    '<circle cx="'+(p.x-12)+'" cy="'+labelY+'" r="3.5" fill="'+s.cea+'" stroke="rgba(0,0,0,.15)" stroke-width=".5"/>'+
+    '<text class="lbl lbl-sm" x="'+(p.x+2)+'" y="'+(labelY+4)+'" text-anchor="middle">'+s.short+'</text>'+
+  '</g>';
+}
+function cablePath(key){
+  var p=POS[key];var isSub=key==='SW';
+  var c1y=(p.y+AVR.y)/2;
+  var col=isSub?'#9b7fd0':'#c3b9a6';
+  var dash=isSub?'stroke-dasharray="3 6"':'';
+  return '<path d="M'+p.x+' '+p.y+' C '+p.x+' '+c1y+' '+AVR.x+' '+c1y+' '+AVR.x+' '+AVR.y+'" fill="none" stroke="'+col+'" stroke-opacity="'+(isSub?'.85':'.7')+'" stroke-width="2.5" '+dash+' stroke-linecap="round"/>';
+}
+function roomDiagram(){
+  var keys=CONFIGS[state.config];
+  var avrSel=state.selected==='avr'?' sel':'';
+  var cables=keys.map(cablePath).join('');
+  var spks=keys.map(speakerTopDown).join('');
+  return '<svg class="diagram" viewBox="0 0 860 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Top-down room layout">'+
+    '<defs>'+
+      '<linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efe2cb"/><stop offset="1" stop-color="#e7d6ba"/></linearGradient>'+
+      '<linearGradient id="rug" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2efe9"/><stop offset="1" stop-color="#d4e6df"/></linearGradient>'+
+      '<linearGradient id="tv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34373d"/><stop offset="1" stop-color="#23343a"/></linearGradient>'+
+    '</defs>'+
+    '<rect x="22" y="22" width="816" height="576" rx="26" fill="url(#floor)" stroke="#dcc9a8" stroke-width="2"/>'+
+    /* front wall band */
+    '<path d="M22 48 a26 26 0 0 1 26 -26 h764 a26 26 0 0 1 26 26 v30 h-816 z" fill="#e7d4b6"/>'+
+    '<text class="lbl lbl-mut lbl-sm" x="46" y="52">Front wall &amp; TV</text>'+
+    /* rug */
+    '<rect x="248" y="326" width="364" height="228" rx="18" fill="url(#rug)" stroke="#c9ddd4" stroke-width="2"/>'+
+    /* TV */
+    '<rect x="326" y="40" width="208" height="16" rx="5" fill="url(#tv)"/>'+
+    '<rect x="424" y="56" width="12" height="9" fill="#cdb696"/>'+
+    '<rect x="402" y="65" width="56" height="5" rx="2.5" fill="#cdb696"/>'+
+    /* sofa */
+    '<g>'+
+      '<ellipse cx="430" cy="506" rx="108" ry="14" fill="rgba(60,45,30,.10)"/>'+
+      '<rect x="326" y="430" width="208" height="22" rx="11" fill="#cdbfa6"/>'+
+      '<rect x="326" y="444" width="208" height="62" rx="16" fill="#d6c8af" stroke="#c4b596"/>'+
+      '<rect x="340" y="452" width="56" height="46" rx="11" fill="#cabb9f"/>'+
+      '<rect x="402" y="452" width="56" height="46" rx="11" fill="#cabb9f"/>'+
+      '<rect x="464" y="452" width="56" height="46" rx="11" fill="#cabb9f"/>'+
+      '<text class="lbl lbl-mut" x="430" y="480" text-anchor="middle">Seating</text>'+
+    '</g>'+
+    /* coffee table */
+    '<rect x="384" y="368" width="92" height="42" rx="10" fill="#dcc6a2" stroke="#ccb488"/>'+
+    cables+
+    /* AVR console */
+    '<g class="hot'+avrSel+'" data-id="avr" tabindex="0" role="button" aria-label="AV receiver">'+
+      '<ellipse cx="'+AVR.x+'" cy="'+(AVR.y+24)+'" rx="74" ry="7" fill="rgba(60,45,30,.14)"/>'+
+      '<rect class="ring" opacity="0" x="'+(AVR.x-72)+'" y="'+(AVR.y-21)+'" width="144" height="50" rx="13" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+      '<rect class="hit" x="'+(AVR.x-72)+'" y="'+(AVR.y-21)+'" width="144" height="60" rx="13" fill="transparent"/>'+
+      '<rect x="'+(AVR.x-68)+'" y="'+(AVR.y-17)+'" width="136" height="42" rx="10" fill="'+CAB+'" stroke="'+CAB_ST+'"/>'+
+      '<circle cx="'+(AVR.x-50)+'" cy="'+(AVR.y+4)+'" r="8" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<circle cx="'+(AVR.x+50)+'" cy="'+(AVR.y+4)+'" r="10" fill="'+DRV+'" stroke="'+DRV_ST+'"/>'+
+      '<rect x="'+(AVR.x-24)+'" y="'+(AVR.y-7)+'" width="48" height="17" rx="4" fill="#0e3138"/>'+
+      '<text class="lbl lbl-sm" x="'+AVR.x+'" y="'+(AVR.y+5)+'" text-anchor="middle" fill="#54d6c6">AVR</text>'+
+      '<text class="lbl lbl-mut" x="'+AVR.x+'" y="'+(AVR.y+40)+'" text-anchor="middle">Receiver</text>'+
+    '</g>'+
+    spks+
+  '</svg>';
+}
+
+/* ---------- AVR FRONT ---------- */
+var FACE='#43434e',FACE2='#34343d',FACE_ST='#56565f';
+function frontPanelMini(){
+  return '<rect x="2" y="14" width="196" height="92" rx="14" fill="'+FACE+'" stroke="'+FACE_ST+'"/>'+
+    '<circle cx="28" cy="40" r="7" fill="'+'#ff7a59'+'"/>'+
+    '<circle cx="56" cy="60" r="17" fill="'+FACE2+'" stroke="'+FACE_ST+'"/><rect x="54" y="46" width="4" height="9" rx="2" fill="#ff7a59"/>'+
+    '<rect x="80" y="44" width="58" height="32" rx="6" fill="#0e3138"/><text x="109" y="65" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="700" font-size="12" fill="#54d6c6">Audiophia</text>'+
+    '<circle cx="164" cy="60" r="19" fill="'+FACE2+'" stroke="'+FACE_ST+'"/><rect x="162" y="44" width="4" height="9" rx="2" fill="#ff7a59"/>';
+}
+function frontPanel(){
+  function part(id,inner,label){var sel=state.selected===id?' sel':'';return '<g class="hot'+sel+'" data-id="'+id+'" tabindex="0" role="button" aria-label="'+esc(label)+'">'+inner+'</g>';}
+  var P=AVR_PARTS;
+  return '<svg class="diagram" viewBox="0 0 900 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AVR front panel">'+
+    '<defs><linearGradient id="face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4a55"/><stop offset="1" stop-color="#37373f"/></linearGradient>'+
+    '<radialGradient id="vfd" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#11414a"/><stop offset="1" stop-color="#0a262b"/></radialGradient></defs>'+
+    '<rect x="14" y="24" width="872" height="172" rx="22" fill="url(#face)" stroke="'+FACE_ST+'" stroke-width="2"/>'+
+    '<rect x="14" y="24" width="872" height="14" rx="22" fill="rgba(255,255,255,.06)"/>'+
+    '<text x="40" y="52" font-family="Nunito,sans-serif" font-weight="600" font-size="12" fill="#a6a2ad">Styled after Denon \u00B7 AVR-X (reference)</text>'+
+    part('fp-power',
+      '<rect class="ring" opacity="0" x="38" y="66" width="46" height="46" rx="23" fill="none" stroke="#ff7a59" stroke-width="3"/>'+
+      '<circle class="hit" cx="61" cy="89" r="27" fill="transparent"/>'+
+      '<circle cx="61" cy="89" r="18" fill="'+FACE2+'" stroke="'+FACE_ST+'" stroke-width="2"/>'+
+      '<path d="M61 80 v9" stroke="#ff7a59" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<path d="M54 86 a9 9 0 1 0 14 0" fill="none" stroke="#ff7a59" stroke-width="2.6"/>'+
+      '<text class="lbl lbl-mut lbl-sm" x="61" y="134" text-anchor="middle">Power</text>',P['fp-power'].name)+
+    part('fp-source',
+      '<rect class="ring" opacity="0" x="112" y="62" width="80" height="80" rx="40" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+      '<circle class="hit" cx="152" cy="102" r="43" fill="transparent"/>'+
+      '<circle cx="152" cy="102" r="34" fill="'+FACE2+'" stroke="'+FACE_ST+'" stroke-width="2"/>'+
+      '<g stroke="#5e5e6a">'+knurl(152,102,32,32,36)+'</g>'+
+      '<circle cx="152" cy="102" r="22" fill="#2c2c35"/>'+
+      '<rect x="150" y="72" width="4" height="13" rx="2" fill="#ff7a59"/>'+
+      '<text class="lbl lbl-mut lbl-sm" x="152" y="158" text-anchor="middle">Source</text>',P['fp-source'].name)+
+    part('fp-display',
+      '<rect class="ring" opacity="0" x="236" y="64" width="320" height="76" rx="12" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+      '<rect class="hit" x="236" y="64" width="320" height="76" fill="transparent"/>'+
+      '<rect x="244" y="72" width="304" height="60" rx="9" fill="url(#vfd)"/>'+
+      '<text x="262" y="106" font-family="Baloo 2,sans-serif" font-weight="700" font-size="24" fill="#54d6c6">Audiophia</text>'+
+      '<text x="262" y="124" font-family="Nunito,sans-serif" font-weight="600" font-size="11.5" fill="#3f9f96">Vol \u221228.5 dB</text>'+
+      '<text x="540" y="124" text-anchor="end" font-family="Nunito,sans-serif" font-weight="600" font-size="11.5" fill="#3f9f96">Cable/Sat \u00B7 Dolby</text>'+
+      '<text class="lbl lbl-mut lbl-sm" x="396" y="158" text-anchor="middle">Display</text>',P['fp-display'].name)+
+    part('fp-volume',
+      '<rect class="ring" opacity="0" x="600" y="52" width="100" height="100" rx="50" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+      '<circle class="hit" cx="650" cy="102" r="53" fill="transparent"/>'+
+      '<circle cx="650" cy="102" r="44" fill="'+FACE2+'" stroke="#5e5e6a" stroke-width="2"/>'+
+      '<g stroke="#646471">'+knurl(650,102,42,42,46)+'</g>'+
+      '<circle cx="650" cy="102" r="30" fill="#2c2c35"/>'+
+      '<rect x="648" y="64" width="4" height="15" rx="2" fill="#ff7a59"/>'+
+      '<text class="lbl lbl-mut lbl-sm" x="650" y="168" text-anchor="middle">Master volume</text>',P['fp-volume'].name)+
+    part('fp-mic',
+      '<rect class="ring" opacity="0" x="744" y="72" width="52" height="36" rx="11" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+      '<rect class="hit" x="744" y="72" width="52" height="46" fill="transparent"/>'+
+      '<circle cx="770" cy="90" r="9" fill="'+DRV+'" stroke="'+FACE_ST+'" stroke-width="2"/><circle cx="770" cy="90" r="3" fill="#50505c"/>'+
+      '<text class="lbl lbl-mut lbl-sm" x="770" y="128" text-anchor="middle">Setup mic</text>',P['fp-mic'].name)+
+    part('fp-phones',
+      '<rect class="ring" opacity="0" x="744" y="134" width="52" height="34" rx="11" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+      '<rect class="hit" x="744" y="134" width="52" height="44" fill="transparent"/>'+
+      '<circle cx="770" cy="151" r="8" fill="'+DRV+'" stroke="'+FACE_ST+'" stroke-width="2"/><circle cx="770" cy="151" r="2.5" fill="#50505c"/>'+
+      '<text class="lbl lbl-mut lbl-sm" x="770" y="188" text-anchor="middle">Phones</text>',P['fp-phones'].name)+
+    '<text x="846" y="214" text-anchor="end" font-family="Nunito,sans-serif" font-weight="600" font-size="12" fill="#9b94a3">Tap a control to see fixes</text>'+
+  '</svg>';
+}
+
+/* ---------- AVR BACK ---------- */
+function backPanel(){
+  var active=CONFIGS[state.config];
+  function isOn(k){return active.indexOf(k)>=0;}
+  var order=['FL','FR','C','SL','SR','SBL','SBR'];
+  var posts='';var bx=44,by=152,gap=112;
+  order.forEach(function(k,i){
+    var s=SPK[k],on=isOn(k),x=bx+i*gap,sel=state.selected===k?' sel':'';
+    var op=on?'1':'0.32';
+    posts+='<g class="hot'+sel+'" data-id="'+(on?k:'')+'" '+(on?'tabindex="0" role="button"':'aria-hidden="true"')+' aria-label="'+esc(s.label)+' terminal" opacity="'+op+'" style="'+(on?'':'pointer-events:none;')+'">'+
+      '<rect class="ring" opacity="0" x="'+(x-12)+'" y="'+(by-16)+'" width="92" height="80" rx="13" fill="none" stroke="'+s.cea+'" stroke-width="3"/>'+
+      '<rect class="hit" x="'+(x-12)+'" y="'+(by-30)+'" width="92" height="98" rx="13" fill="transparent"/>'+
+      '<rect x="'+(x-6)+'" y="'+(by-12)+'" width="80" height="62" rx="11" fill="'+FACE2+'" stroke="'+FACE_ST+'"/>'+
+      '<circle cx="'+(x+14)+'" cy="'+(by+12)+'" r="13" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="2"/>'+
+      '<circle cx="'+(x+14)+'" cy="'+(by+12)+'" r="7" fill="#e0625b"/>'+
+      '<circle cx="'+(x+50)+'" cy="'+(by+12)+'" r="13" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="2"/>'+
+      '<circle cx="'+(x+50)+'" cy="'+(by+12)+'" r="7" fill="#1a1a21" stroke="#5a5a66"/>'+
+      '<rect x="'+(x-2)+'" y="'+(by-8)+'" width="72" height="6" rx="3" fill="'+s.cea+'"/>'+
+      '<text class="lbl lbl-sm" x="'+(x+32)+'" y="'+(by-16)+'" text-anchor="middle" fill="'+(on?'#54505d':'#b8b1a4')+'">'+s.short+'</text>'+
+      '<text class="lbl lbl-mut lbl-sm" x="'+(x+14)+'" y="'+(by+38)+'" text-anchor="middle" fill="#cabfae">+</text>'+
+      '<text class="lbl lbl-mut lbl-sm" x="'+(x+50)+'" y="'+(by+38)+'" text-anchor="middle" fill="#cabfae">\u2212</text>'+
+    '</g>';
+  });
+  var subSel=state.selected==='SW'?' sel':'';
+  var subOut='<g class="hot'+subSel+'" data-id="SW" tabindex="0" role="button" aria-label="Subwoofer pre-out">'+
+    '<rect class="ring" opacity="0" x="44" y="248" width="158" height="58" rx="13" fill="none" stroke="#9b7fd0" stroke-width="3"/>'+
+    '<rect class="hit" x="44" y="248" width="158" height="58" rx="13" fill="transparent"/>'+
+    '<rect x="44" y="248" width="158" height="58" rx="13" fill="'+FACE2+'" stroke="'+FACE_ST+'"/>'+
+    '<circle cx="78" cy="277" r="14" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="2"/><circle cx="78" cy="277" r="6" fill="#9b7fd0"/>'+
+    '<text class="lbl lbl-sm" x="142" y="273" text-anchor="middle" fill="#cdb6e6">Subwoofer</text>'+
+    '<text class="lbl lbl-mut lbl-sm" x="142" y="289" text-anchor="middle" fill="#b9b0c6">Pre-out</text>'+
+  '</g>';
+  var hdSel=state.selected==='hdmi-out'?' sel':'';var hiSel=state.selected==='hdmi-in'?' sel':'';
+  var hdmiOut='<g class="hot'+hdSel+'" data-id="hdmi-out" tabindex="0" role="button" aria-label="HDMI monitor out ARC">'+
+    '<rect class="ring" opacity="0" x="520" y="248" width="152" height="58" rx="13" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+    '<rect class="hit" x="520" y="248" width="152" height="58" rx="13" fill="transparent"/>'+
+    '<rect x="520" y="248" width="152" height="58" rx="13" fill="'+FACE2+'" stroke="'+FACE_ST+'"/>'+
+    '<path d="M540 268 h70 l-8 11 h-54 z" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="1.5"/>'+
+    '<text class="lbl lbl-sm" x="596" y="298" text-anchor="middle" fill="#7fe0d4">TV out \u00B7 ARC</text>'+
+  '</g>';
+  var hdmiIn='<g class="hot'+hiSel+'" data-id="hdmi-in" tabindex="0" role="button" aria-label="HDMI inputs">'+
+    '<rect class="ring" opacity="0" x="686" y="248" width="172" height="58" rx="13" fill="none" stroke="#16a99a" stroke-width="3"/>'+
+    '<rect class="hit" x="686" y="248" width="172" height="58" rx="13" fill="transparent"/>'+
+    '<rect x="686" y="248" width="172" height="58" rx="13" fill="'+FACE2+'" stroke="'+FACE_ST+'"/>'+
+    '<path d="M702 268 h40 l-6 9 h-28 z" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="1.5"/>'+
+    '<path d="M754 268 h40 l-6 9 h-28 z" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="1.5"/>'+
+    '<path d="M806 268 h40 l-6 9 h-28 z" fill="#2a2a33" stroke="'+FACE_ST+'" stroke-width="1.5"/>'+
+    '<text class="lbl lbl-sm" x="772" y="298" text-anchor="middle" fill="#7fe0d4">HDMI inputs</text>'+
+  '</g>';
+  return '<svg class="diagram" viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AVR back panel">'+
+    '<defs><linearGradient id="back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46464f"/><stop offset="1" stop-color="#34343c"/></linearGradient></defs>'+
+    '<rect x="14" y="14" width="872" height="312" rx="22" fill="url(#back)" stroke="'+FACE_ST+'" stroke-width="2"/>'+
+    '<text x="40" y="44" font-family="Nunito,sans-serif" font-weight="700" font-size="12" fill="#cfcbd4">Speaker terminals \u00B7 color-coded</text>'+
+    '<line x1="40" y1="60" x2="860" y2="60" stroke="rgba(255,255,255,.08)"/>'+
+    posts+
+    '<text x="40" y="240" font-family="Nunito,sans-serif" font-weight="700" font-size="12" fill="#bdb6c2">Pre-out</text>'+
+    '<text x="516" y="240" font-family="Nunito,sans-serif" font-weight="700" font-size="12" fill="#bdb6c2">Video \u00B7 HDMI</text>'+
+    subOut+hdmiOut+hdmiIn+
+    '<text x="858" y="322" text-anchor="end" font-family="Nunito,sans-serif" font-weight="600" font-size="11.5" fill="#a39db0">Faded terminals aren\u2019t used in '+state.config+'</text>'+
+  '</svg>';
+}
+
+/* ---------- detail ---------- */
+function detailFor(id){
+  if(SPK[id]){
+    var s=SPK[id],kind=s.type;
+    var specs='<div class="dt-spec">'+
+      '<span class="spec"><span class="sc" style="background:'+s.cea+'"></span><b>Color</b>'+s.ceaName+'</span>'+
+      '<span class="spec"><b>Terminal</b>'+esc(s.term)+'</span>'+
+      '<span class="spec"><b>Type</b>'+(s.passive?'Passive':'Active')+'</span></div>';
+    var role=s.short==='SW'
+      ? 'Active subwoofer. Connects to the AVR\u2019s SUBWOOFER PRE-OUT by RCA and has its own power and amplifier \u2014 it doesn\u2019t use speaker wire.'
+      : 'Passive '+kind+' speaker driven by the AVR\u2019s '+s.term+' channel over two-conductor speaker wire.';
+    return {kicker:s.short==='SW'?'Loudspeaker \u00B7 LFE':'Loudspeaker \u00B7 '+s.short,name:s.label,role:role,illu:kind,color:s.cea,specs:specs,issues:speakerIssues(s)};
+  }
+  if(id==='avr'){
+    return {kicker:'The hub',name:'AV Receiver',illu:'avr',color:'#16a99a',
+      role:'The heart of the system. It powers every passive speaker, feeds the subwoofer, switches HDMI sources, and decodes surround sound. Open the Receiver front and Receiver back views to tap individual controls and terminals.',
+      specs:'<div class="dt-spec"><span class="spec"><b>Reference</b>Denon / Marantz</span><span class="spec"><b>Setup</b>'+state.config+'</span></div>',
+      issues:[
+        {q:'Where do I start a setup?',steps:[
+          '<b>Confirm the model</b> and the speaker count for this layout ('+state.config+').',
+          '<b>Wire the passive speakers</b> to their color-matched terminals on the back, watching polarity.',
+          '<b>Connect the sub</b> by RCA to SUBWOOFER PRE-OUT.',
+          '<b>Connect the TV</b> by HDMI from the TV-out (ARC) to the TV\u2019s ARC port; enable CEC.',
+          '<b>Run calibration</b> with the setup mic at the listening position.'
+        ]},
+        {q:'Receiver shuts off after a few seconds',steps:[
+          '<b>Protection mode.</b> Almost always a speaker-wire short. Power off and unplug.',
+          '<b>Inspect every terminal</b> for stray strands bridging + and \u2212.',
+          '<b>Re-dress and retest</b> at low volume.'
+        ]}
+      ]};
+  }
+  var p=AVR_PARTS[id];
+  if(p)return {kicker:p.kicker,name:p.name,role:p.role,illu:p.illu,color:'#16a99a',specs:'',issues:p.issues};
+  return null;
+}
+function renderDetail(){
+  if(!state.selected){
+    var keys=CONFIGS[state.config];
+    var rows=keys.map(function(k){var s=SPK[k];
+      return '<button class="leg-row" data-id="'+k+'"><span class="leg-chip" style="background:'+s.cea+'"></span><span class="leg-name">'+esc(s.label)+'</span><span class="leg-code">'+s.short+'</span></button>';
+    }).join('');
+    rows+='<button class="leg-row" data-id="avr"><span class="leg-chip" style="background:#16a99a"></span><span class="leg-name">AV Receiver</span><span class="leg-code">AVR</span></button>';
+    detail.innerHTML='<div class="dt-empty"><h3>Your '+state.config+' setup</h3>'+
+      '<p>'+keys.length+' pieces connected. Tap a part in the picture \u2014 or pick one here \u2014 and I\u2019ll show you how to fix it.</p>'+
+      '<div class="legend">'+rows+'</div></div>';
+    Array.prototype.forEach.call(detail.querySelectorAll('.leg-row'),function(b){b.addEventListener('click',function(){select(b.getAttribute('data-id'));});});
+    return;
+  }
+  var d=detailFor(state.selected);
+  if(!d){state.selected=null;return renderDetail();}
+  var issues=d.issues.map(function(it,i){
+    var steps=it.steps.map(function(st){return '<li>'+st+'</li>';}).join('');
+    return '<div class="iss" data-iss="'+i+'"><button class="iss-q"><span class="iss-dot" style="background:'+d.color+'"></span>'+esc(it.q)+'<span class="tw">+</span></button><div class="iss-body"><ol>'+steps+'</ol></div></div>';
+  }).join('');
+  detail.innerHTML=
+    '<div class="dt-head"><div class="dt-kicker">'+esc(d.kicker)+'</div><div class="dt-name">'+esc(d.name)+'</div><div class="dt-role">'+d.role+'</div></div>'+
+    '<div class="dt-illu">'+illu(d.illu,d.color)+'</div>'+(d.specs||'')+
+    '<div class="issues"><div class="issues-lab">How to fix it</div>'+issues+'</div>'+
+    '<button class="deselect">\u2039 Back to all parts</button>';
+  var first=detail.querySelector('.iss');if(first)first.classList.add('open');
+  Array.prototype.forEach.call(detail.querySelectorAll('.iss-q'),function(b){b.addEventListener('click',function(){b.parentNode.classList.toggle('open');});});
+  detail.querySelector('.deselect').addEventListener('click',function(){state.selected=null;renderAll();});
+}
+
+/* ---------- render + events ---------- */
+function renderStage(){
+  if(state.view==='room'){stageTitle.textContent='The room \u00B7 '+state.config;stage.innerHTML=roomDiagram();}
+  else if(state.view==='front'){stageTitle.textContent='Receiver \u2013 front';stage.innerHTML=frontPanel();}
+  else{stageTitle.textContent='Receiver \u2013 back \u00B7 '+state.config;stage.innerHTML=backPanel();}
+  Array.prototype.forEach.call(stage.querySelectorAll('.hot[data-id]'),function(g){
+    var id=g.getAttribute('data-id');if(!id)return;
+    g.addEventListener('click',function(){select(id);});
+    g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();select(id);}});
+  });
+  var selRing=stage.querySelector('.hot.sel .ring');if(selRing)selRing.setAttribute('opacity','1');
+}
+function renderAll(){renderStage();renderDetail();}
+function select(id){if(!id)return;state.selected=id;renderAll();if(window.innerWidth<=920){detail.scrollIntoView({behavior:'smooth',block:'start'});}}
+
+document.getElementById('configSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  state.config=b.getAttribute('data-c');
+  Array.prototype.forEach.call(this.querySelectorAll('button'),function(x){x.setAttribute('aria-pressed',x===b);});
+  pill.textContent=state.config+' setup';
+  if(state.selected&&SPK[state.selected]&&CONFIGS[state.config].indexOf(state.selected)<0&&state.selected!=='SW')state.selected=null;
+  renderAll();
+});
+document.getElementById('viewSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  state.view=b.getAttribute('data-v');
+  Array.prototype.forEach.call(this.querySelectorAll('button'),function(x){x.setAttribute('aria-pressed',x===b);});
+  renderAll();
+});
+renderAll();
+})();
+</script>
+</body>
+</html>
